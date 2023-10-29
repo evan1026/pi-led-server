@@ -31,7 +31,7 @@ class SetColorProcess:
         return True
 
 
-class HalloweenProcess:
+class Halloween1Process:
 
     def __init__(self):
         self.orange = Color(255, 60, 0)
@@ -53,6 +53,31 @@ class HalloweenProcess:
         return False
 
 
+class Halloween2Process:
+
+    def __init__(self):
+        self.orange = Color(255, 60, 0)
+        self.purple = Color(130, 0, 255)
+        self.current_color = self.orange
+        self.offset = 0
+        self.can_wait = False
+
+    def run(self, strip: PixelStrip) -> bool:
+        strip.setPixelColor(self.offset, self.current_color)
+        strip.show()
+
+        self.offset += 1
+        self.offset %= strip.numPixels()
+
+        if self.offset == 0:
+            if self.current_color == self.orange:
+                self.current_color = self.purple
+            else:
+                self.current_color = self.orange
+
+        return False
+
+
 class DoNothingProcess:
     def __init__(self):
         self.can_wait = True
@@ -63,7 +88,8 @@ class DoNothingProcess:
 
 command_names = {
     'set_color': SetColorProcess,
-    'halloween': HalloweenProcess
+    'halloween1': Halloween1Process,
+    'halloween2': Halloween2Process
 }
 
 
@@ -99,7 +125,8 @@ def process_command(pipe, wait=False):
 
         pipe.send(CommandResponse.OK)
         return process
-    except Exception:
+    except Exception as e:
+        print(repr(e))
         pipe.send(CommandResponse.FAILED)
         return None
 

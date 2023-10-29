@@ -47,10 +47,21 @@ def set_color_endpoint():
         return 'oof', status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
-@app.route('/halloween', methods=['GET'])
-def halloween_endpoint():
-    resp = pipe_send(('halloween',))
-    print(f'halloween(): {resp}')
+@app.route('/halloween1', methods=['GET'])
+def halloween1_endpoint():
+    resp = pipe_send(('halloween1',))
+    print(f'halloween1(): {resp}')
+
+    if resp == CommandResponse.OK:
+        return f'SPOOKY', status.HTTP_200_OK
+    else:
+        return 'Not spooky :(', status.HTTP_500_INTERNAL_SERVER_ERROR
+
+
+@app.route('/halloween2', methods=['GET'])
+def halloween2_endpoint():
+    resp = pipe_send(('halloween2',))
+    print(f'halloween2(): {resp}')
 
     if resp == CommandResponse.OK:
         return f'SPOOKY', status.HTTP_200_OK
