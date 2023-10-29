@@ -113,7 +113,6 @@ def run_control_loop(pipe):
 
     try:
         while True:
-            print(f"Stepping {current_process}")
             done = current_process.run(strip)
             if done:
                 current_process = DoNothingProcess()
