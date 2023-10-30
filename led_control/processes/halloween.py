@@ -2,7 +2,7 @@ import time
 
 from rpi_ws281x import Color, PixelStrip
 
-from led_control import Process
+from .process import Process
 
 
 class Halloween1Process(Process):

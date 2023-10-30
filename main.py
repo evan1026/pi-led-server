@@ -5,7 +5,7 @@ from flask import Flask, request
 from flask_api import status
 from rpi_ws281x import Color
 
-from led_control import run_control_loop, CommandResponse
+import led_control
 
 app = Flask(__name__)
 pipe = None
@@ -41,43 +41,24 @@ def set_color_endpoint():
     resp = pipe_send(('set_color', Color(red, green, blue)))
     print(f'set_color({red}, {green}, {blue}): {resp}')
 
-    if resp == CommandResponse.OK:
+    if resp == led_control.CommandResponse.OK:
         return f'<!DOCTYPE html><html><head><style>body{{background-color:rgb({red},{green},{blue});}}</style></head><body></body></html>', status.HTTP_200_OK
     else:
         return 'oof', status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
-@app.route('/halloween1', methods=['GET'])
-def halloween1_endpoint():
-    resp = pipe_send(('halloween1',))
-    print(f'halloween1(): {resp}')
+@app.route('/pattern/<path:pattern>')
+def pattern_input(pattern: str):
+    if pattern not in led_control.no_args_commands:
+        return "Unknown pattern", status.HTTP_404_NOT_FOUND
 
-    if resp == CommandResponse.OK:
-        return f'SPOOKY', status.HTTP_200_OK
+    resp = pipe_send((pattern,))
+    print(f'{pattern}(): {resp}')
+
+    if resp == led_control.CommandResponse.OK:
+        return '', status.HTTP_200_OK
     else:
-        return 'Not spooky :(', status.HTTP_500_INTERNAL_SERVER_ERROR
-
-
-@app.route('/halloween2', methods=['GET'])
-def halloween2_endpoint():
-    resp = pipe_send(('halloween2',))
-    print(f'halloween2(): {resp}')
-
-    if resp == CommandResponse.OK:
-        return f'SPOOKY', status.HTTP_200_OK
-    else:
-        return 'Not spooky :(', status.HTTP_500_INTERNAL_SERVER_ERROR
-
-
-@app.route('/halloween3', methods=['GET'])
-def halloween3_endpoint():
-    resp = pipe_send(('halloween3',))
-    print(f'halloween3(): {resp}')
-
-    if resp == CommandResponse.OK:
-        return f'SPOOKY', status.HTTP_200_OK
-    else:
-        return 'Not spooky :(', status.HTTP_500_INTERNAL_SERVER_ERROR
+        return '', status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
 @app.route('/')
@@ -87,7 +68,7 @@ def root():
 
 if __name__ == '__main__':
     parent_conn, child_conn = Pipe()
-    p = Process(target=run_control_loop, args=(child_conn,))
+    p = Process(target=led_control.run_control_loop, args=(child_conn,))
 
     pipe = parent_conn
 

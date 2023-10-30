@@ -1,6 +1,6 @@
 from rpi_ws281x import Color, PixelStrip
 
-from led_control import Process
+from .process import Process
 
 
 class SetColorProcess(Process):

@@ -1,7 +1,7 @@
 import abc
 from enum import Enum
 from typing import Tuple, Optional, Dict, Type
-from processes import *
+from .processes import *
 
 from rpi_ws281x import PixelStrip
 
@@ -17,15 +17,6 @@ LED_CHANNEL = 0
 class CommandResponse(Enum):
     OK = 1
     FAILED = 2
-
-
-class Process(abc.ABC):
-    def __init__(self, can_wait: bool):
-        self.can_wait = can_wait
-
-    @abc.abstractmethod
-    def run(self, strip: PixelStrip) -> bool:
-        pass
 
 
 commands: Dict[str, Type[Process]] = {
