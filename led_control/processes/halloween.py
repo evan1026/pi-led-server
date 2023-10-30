@@ -15,7 +15,7 @@ class Halloween1Process(Process):
         self.offset = 0
         self.wait_ms = 10
 
-    def run(self, strip: PixelStrip) -> bool:
+    def run(self, strip: PixelStrip) -> Process:
         for i in range(strip.numPixels()):
             strip.setPixelColor(i, self.orange if (i + self.offset) % (self.size * 2) < self.size else self.purple)
         time.sleep(self.wait_ms / 1000.0)
@@ -23,7 +23,7 @@ class Halloween1Process(Process):
         self.offset += 1
         self.offset %= self.size * 2
 
-        return False
+        return self
 
 
 class Halloween2Process(Process):
@@ -35,7 +35,7 @@ class Halloween2Process(Process):
         self.current_color = self.orange
         self.offset = 0
 
-    def run(self, strip: PixelStrip) -> bool:
+    def run(self, strip: PixelStrip) -> Process:
         strip.setPixelColor(self.offset, self.current_color)
 
         self.offset += 1
@@ -47,7 +47,7 @@ class Halloween2Process(Process):
             else:
                 self.current_color = self.orange
 
-        return False
+        return self
 
 
 class Halloween3Process(Process):
@@ -61,7 +61,7 @@ class Halloween3Process(Process):
         self.offset = 0
         self.chases = 6
 
-    def run(self, strip: PixelStrip) -> bool:
+    def run(self, strip: PixelStrip) -> Process:
         chase_size = strip.numPixels() / self.chases
 
         for i in range(self.chases):
@@ -70,4 +70,4 @@ class Halloween3Process(Process):
         self.offset += 1
         self.offset %= strip.numPixels()
 
-        return False
+        return self

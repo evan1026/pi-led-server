@@ -44,7 +44,7 @@ def receive_from_pipe(pipe, timeout=-1) -> Optional[Tuple[str, ...]]:
     return None
 
 
-def process_command(pipe, wait=False) -> Optional[Process]:
+def process_command(pipe, current_process, wait=False) -> Optional[Process]:
     if wait:
         command = receive_from_pipe(pipe)
     else:
@@ -59,6 +59,9 @@ def process_command(pipe, wait=False) -> Optional[Process]:
 
         process_class = commands[name]
         process = process_class(*args)
+
+        if hasattr(process, 'set_previous_process'):
+            process.set_previous_process(current_process)
 
         pipe.send(CommandResponse.OK)
         return process
@@ -79,15 +82,14 @@ def run_control_loop(pipe):
 
     try:
         while True:
-            for _ in range(speed):
-                done = current_process.run(strip)
-
-                if done:
-                    current_process = DoNothingProcess()
-
+            i = 0
+            while i < speed:
+                if not isinstance(current_process, InterruptingProcess):
+                    i += 1
+                current_process = current_process.run(strip)
             strip.show()
 
-            new_process = process_command(pipe, wait=current_process.can_wait)
+            new_process = process_command(pipe, current_process, wait=current_process.can_wait)
 
             if new_process is not None:
                 current_process = new_process
