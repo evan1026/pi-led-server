@@ -26,7 +26,14 @@
 
         function setBrightness() {
             let value = document.getElementById('brightnessInput').value;
-            hitEndpoint('/brightness?' + new URLSearchParams({
+            hitEndpoint('/set_value/brightness?' + new URLSearchParams({
+                value: value
+            }));
+        }
+
+        function setScaleFactor() {
+            let value = document.getElementById('scaleFactorInput').value;
+            hitEndpoint('/set_value/scale_factor?' + new URLSearchParams({
                 value: value
             }));
         }
@@ -51,6 +58,13 @@
     <label>
         <input type="range" min="0" max="255" value="0" id="brightnessInput" />
         <button onclick="setBrightness()">Set brightness</button>
+    </label>
+    <br/>
+    <br/>
+
+    <label>
+        <input type="range" min="0" max="12" value="6" id="scaleFactorInput" />
+        <button onclick="setScaleFactor()">Set scale factor</button>
     </label>
 </body>
 </html>

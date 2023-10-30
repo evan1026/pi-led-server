@@ -63,14 +63,15 @@ def set_color():
 
 
 @app.route('/set_value/<path:key>', methods=['GET'])
-def pattern_input(key: str):
+def set_value(key: str):
+    key = 'set_' + key
     if key not in led_control.set_value_commands:
         return "Unknown item", status.HTTP_404_NOT_FOUND
 
     value, = require_args(('value',), request.args)
     value = int(value)
 
-    resp = pipe_send(('set_' + key, value))
+    resp = pipe_send((key, value))
     return get_return_for_response(resp)
 
 
