@@ -1,4 +1,3 @@
-import abc
 from enum import Enum
 from typing import Tuple, Optional, Dict, Type
 from .processes import *
@@ -76,17 +75,17 @@ def run_control_loop(pipe):
     strip.begin()
     strip.show()
 
-    speed = 6
+    context = ProcessContext(6)
 
     current_process: Process = DoNothingProcess()
 
     try:
         while True:
             i = 0
-            while i < speed:
+            while i < context.scale_factor:
                 if not isinstance(current_process, InterruptingProcess):
                     i += 1
-                current_process = current_process.run(strip)
+                current_process = current_process.run(strip, context)
             strip.show()
 
             new_process = process_command(pipe, current_process, wait=current_process.can_wait)

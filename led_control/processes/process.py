@@ -3,12 +3,17 @@ import abc
 from rpi_ws281x import PixelStrip
 
 
+class ProcessContext:
+    def __init__(self, scale_factor):
+        self.scale_factor = scale_factor
+
+
 class Process(abc.ABC):
     def __init__(self, can_wait: bool):
         self.can_wait = can_wait
 
     @abc.abstractmethod
-    def run(self, strip: PixelStrip) -> "Process":
+    def run(self, strip: PixelStrip, context: ProcessContext) -> "Process":
         pass
 
 

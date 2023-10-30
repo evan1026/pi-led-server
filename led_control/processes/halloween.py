@@ -2,7 +2,7 @@ import time
 
 from rpi_ws281x import Color, PixelStrip
 
-from .process import Process
+from .process import Process, ProcessContext
 
 
 class Halloween1Process(Process):
@@ -15,7 +15,7 @@ class Halloween1Process(Process):
         self.offset = 0
         self.wait_ms = 10
 
-    def run(self, strip: PixelStrip) -> Process:
+    def run(self, strip: PixelStrip, context: ProcessContext) -> Process:
         for i in range(strip.numPixels()):
             strip.setPixelColor(i, self.orange if (i + self.offset) % (self.size * 2) < self.size else self.purple)
         time.sleep(self.wait_ms / 1000.0)
@@ -35,7 +35,7 @@ class Halloween2Process(Process):
         self.current_color = self.orange
         self.offset = 0
 
-    def run(self, strip: PixelStrip) -> Process:
+    def run(self, strip: PixelStrip, context: ProcessContext) -> Process:
         strip.setPixelColor(self.offset, self.current_color)
 
         self.offset += 1
@@ -61,7 +61,7 @@ class Halloween3Process(Process):
         self.offset = 0
         self.chases = 6
 
-    def run(self, strip: PixelStrip) -> Process:
+    def run(self, strip: PixelStrip, context: ProcessContext) -> Process:
         chase_size = strip.numPixels() / self.chases
 
         for i in range(self.chases):
