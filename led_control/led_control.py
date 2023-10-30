@@ -84,7 +84,8 @@ def run_control_loop(pipe):
     try:
         while True:
             i = 0
-            while i < context.scale_factor:
+            iterations = context.scale_factor if context.scale_factor > 0 else 1
+            while i < iterations:
                 if not isinstance(current_process, InterruptingProcess):
                     i += 1
                 current_process = current_process.run(strip, context)
