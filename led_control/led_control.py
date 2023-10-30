@@ -21,12 +21,14 @@ class CommandResponse(Enum):
 commands: Dict[str, Type[Process]] = {
     'set_brightness': SetBrightnessProcess,
     'set_color': SetColorProcess,
+    'set_scale_factor': SetScaleFactorProcess,
     'halloween1': Halloween1Process,
     'halloween2': Halloween2Process,
     'halloween3': Halloween3Process
 }
 
 no_args_commands = ['halloween1', 'halloween2', 'halloween3']
+set_value_commands = ['set_brightness', 'set_scale_factor']
 
 
 def fade_out(strip: PixelStrip):

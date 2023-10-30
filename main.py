@@ -62,12 +62,15 @@ def set_color():
     return get_return_for_response(resp)
 
 
-@app.route('/brightness', methods=['GET'])
-def set_brightness():
+@app.route('/set_value/<path:key>', methods=['GET'])
+def pattern_input(key: str):
+    if key not in led_control.set_value_commands:
+        return "Unknown item", status.HTTP_404_NOT_FOUND
+
     value, = require_args(('value',), request.args)
     value = int(value)
 
-    resp = pipe_send(('set_brightness', value))
+    resp = pipe_send(('set_' + key, value))
     return get_return_for_response(resp)
 
 
