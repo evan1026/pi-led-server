@@ -20,6 +20,7 @@ class CommandResponse(Enum):
 
 
 commands: Dict[str, Type[Process]] = {
+    'set_brightness': SetBrightnessProcess,
     'set_color': SetColorProcess,
     'halloween1': Halloween1Process,
     'halloween2': Halloween2Process,

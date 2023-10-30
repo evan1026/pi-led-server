@@ -21,3 +21,13 @@ class DoNothingProcess(Process):
 
     def run(self, strip: PixelStrip) -> bool:
         return False
+
+
+class SetBrightnessProcess(Process):
+    def __init__(self, value: int):
+        super().__init__(False)
+        self.value = value
+
+    def run(self, strip: PixelStrip) -> bool:
+        strip.setBrightness(self.value)
+        return True

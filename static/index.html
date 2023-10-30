@@ -23,17 +23,34 @@
                 r: r, g: g, b: b
             }));
         }
+
+        function setBrightness() {
+            let value = document.getElementById('brightnessInput').value;
+            hitEndpoint('/brightness?' + new URLSearchParams({
+                value: value
+            }));
+        }
     </script>
 </head>
 <body>
     <button onclick="hitEndpoint('/pattern/halloween1')">halloween1</button>
     <button onclick="hitEndpoint('/pattern/halloween2')">halloween2</button>
     <button onclick="hitEndpoint('/pattern/halloween3')">halloween3</button>
+
     <br/>
     <br/>
+
     <label>
         <input type="color" id="colorInput" />
         <button onclick="setColor()">Set color</button>
+    </label>
+
+    <br/>
+    <br/>
+
+    <label>
+        <input type="range" min="0" max="255" value="0" id="brightnessInput" />
+        <button onclick="setBrightness()">Set brightness</button>
     </label>
 </body>
 </html>
