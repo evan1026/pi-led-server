@@ -27,7 +27,6 @@ class SetColorProcess:
     def run(self, strip: PixelStrip) -> bool:
         for i in range(strip.numPixels()):
             strip.setPixelColor(i, self.color)
-        strip.show()
         return True
 
 
@@ -38,13 +37,12 @@ class Halloween1Process:
         self.purple = Color(130, 0, 255)
         self.size = 8
         self.offset = 0
-        self.wait_ms = 50
+        self.wait_ms = 10
         self.can_wait = False
 
     def run(self, strip: PixelStrip) -> bool:
         for i in range(strip.numPixels()):
             strip.setPixelColor(i, self.orange if (i + self.offset) % (self.size * 2) < self.size else self.purple)
-        strip.show()
         time.sleep(self.wait_ms / 1000.0)
 
         self.offset += 1
@@ -64,7 +62,6 @@ class Halloween2Process:
 
     def run(self, strip: PixelStrip) -> bool:
         strip.setPixelColor(self.offset, self.current_color)
-        strip.show()
 
         self.offset += 1
         self.offset %= strip.numPixels()
@@ -74,6 +71,29 @@ class Halloween2Process:
                 self.current_color = self.purple
             else:
                 self.current_color = self.orange
+
+        return False
+
+
+class Halloween3Process:
+
+    def __init__(self):
+        orange = Color(255, 60, 0)
+        purple = Color(130, 0, 255)
+        black = Color(0, 0, 0)
+        self.colors = [orange, orange, black, purple, purple, black]
+        self.offset = 0
+        self.chases = 6
+        self.can_wait = False
+
+    def run(self, strip: PixelStrip) -> bool:
+        chase_size = strip.numPixels() / self.chases
+
+        for i in range(self.chases):
+            strip.setPixelColor((self.offset + int(i * chase_size)) % strip.numPixels(), self.colors[i % len(self.colors)])
+
+        self.offset += 1
+        self.offset %= strip.numPixels()
 
         return False
 
@@ -89,7 +109,8 @@ class DoNothingProcess:
 command_names = {
     'set_color': SetColorProcess,
     'halloween1': Halloween1Process,
-    'halloween2': Halloween2Process
+    'halloween2': Halloween2Process,
+    'halloween3': Halloween3Process
 }
 
 
@@ -136,13 +157,19 @@ def run_control_loop(pipe):
     strip.begin()
     strip.show()
 
+    speed = 6
+
     current_process = DoNothingProcess()
 
     try:
         while True:
-            done = current_process.run(strip)
-            if done:
-                current_process = DoNothingProcess()
+            for _ in range(speed):
+                done = current_process.run(strip)
+
+                if done:
+                    current_process = DoNothingProcess()
+
+            strip.show()
 
             new_process = process_command(pipe, wait=current_process.can_wait)
 
