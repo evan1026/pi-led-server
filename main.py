@@ -1,9 +1,10 @@
 from multiprocessing import Process, Pipe, Lock
-from typing import Any
+from typing import Any, List, Iterable
 
 from flask import Flask, request
 from flask_api import status
 from rpi_ws281x import Color
+from werkzeug.datastructures import MultiDict
 
 import led_control
 
@@ -12,58 +13,82 @@ pipe = None
 pipe_mutex = Lock()
 
 
-def pipe_send(data: Any):
+class MissingValuesException(Exception):
+    def __init__(self, missing_args: List[str]):
+        self.missing_args = missing_args
+
+
+def pipe_send(data: Any) -> Any:
     with pipe_mutex:
         pipe.send(data)
-        return pipe.recv()
+        resp = pipe.recv()
+    print(f'{data}: {resp}')
+    return resp
+
+
+def require_args(required_args: Iterable[str], args: MultiDict) -> List[str]:
+    values = []
+    missing_args = []
+
+    for arg in required_args:
+        value = args.get(arg)
+        if value is None:
+            missing_args.append(arg)
+        else:
+            values.append(value)
+
+    if len(missing_args) > 0:
+        raise MissingValuesException(missing_args)
+
+    return values
+
+
+def get_return_for_response(response: led_control.CommandResponse):
+    if response == led_control.CommandResponse.OK:
+        return '', status.HTTP_200_OK
+    else:
+        return '', status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
 @app.route('/color', methods=['GET'])
-def set_color_endpoint():
-    red = request.args.get('r')
-    green = request.args.get('g')
-    blue = request.args.get('b')
-
-    missing_args = []
-    if red is None:
-        missing_args.append('r')
-    if green is None:
-        missing_args.append('g')
-    if blue is None:
-        missing_args.append('b')
-    if len(missing_args) > 0:
-        return "Missing required args: " + str(missing_args), status.HTTP_400_BAD_REQUEST
+def set_color():
+    red, green, blue = require_args(('r', 'g', 'b'), request.args)
 
     red = int(red)
     green = int(green)
     blue = int(blue)
 
     resp = pipe_send(('set_color', Color(red, green, blue)))
-    print(f'set_color({red}, {green}, {blue}): {resp}')
-
-    if resp == led_control.CommandResponse.OK:
-        return f'<!DOCTYPE html><html><head><style>body{{background-color:rgb({red},{green},{blue});}}</style></head><body></body></html>', status.HTTP_200_OK
-    else:
-        return 'oof', status.HTTP_500_INTERNAL_SERVER_ERROR
+    return get_return_for_response(resp)
 
 
-@app.route('/pattern/<path:pattern>')
+@app.route('/brightness', methods=['GET'])
+def set_brightness():
+    value = require_args(('value',), request.args)
+    value = int(value)
+
+    resp = pipe_send(('set_brightness', value))
+    return get_return_for_response(resp)
+
+
+@app.route('/pattern/<path:pattern>', methods=['GET'])
 def pattern_input(pattern: str):
     if pattern not in led_control.no_args_commands:
         return "Unknown pattern", status.HTTP_404_NOT_FOUND
 
     resp = pipe_send((pattern,))
-    print(f'{pattern}(): {resp}')
 
-    if resp == led_control.CommandResponse.OK:
-        return '', status.HTTP_200_OK
-    else:
-        return '', status.HTTP_500_INTERNAL_SERVER_ERROR
+    return get_return_for_response(resp)
 
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def root():
     return app.send_static_file('index.html')
+
+
+@app.errorhandler(MissingValuesException)
+def handle_missing_params(e: MissingValuesException):
+    return "Missing required args: " + str(e.missing_args), status.HTTP_400_BAD_REQUEST
 
 
 if __name__ == '__main__':
