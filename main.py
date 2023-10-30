@@ -68,6 +68,7 @@ def halloween2_endpoint():
     else:
         return 'Not spooky :(', status.HTTP_500_INTERNAL_SERVER_ERROR
 
+
 @app.route('/halloween3', methods=['GET'])
 def halloween3_endpoint():
     resp = pipe_send(('halloween3',))
@@ -77,6 +78,11 @@ def halloween3_endpoint():
         return f'SPOOKY', status.HTTP_200_OK
     else:
         return 'Not spooky :(', status.HTTP_500_INTERNAL_SERVER_ERROR
+
+
+@app.route('/')
+def root():
+    return app.send_static_file('index.html')
 
 
 if __name__ == '__main__':
