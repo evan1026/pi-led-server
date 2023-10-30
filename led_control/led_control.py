@@ -31,7 +31,7 @@ no_args_commands = ['halloween1', 'halloween2', 'halloween3']
 
 
 def fade_out(strip: PixelStrip):
-    for i in range(255, -1, -32):
+    for i in range(strip.getBrightness(), -1, -32):
         strip.setBrightness(i)
         strip.show()
     strip.setBrightness(0)
