@@ -64,7 +64,7 @@ def set_color():
 
 @app.route('/brightness', methods=['GET'])
 def set_brightness():
-    value = require_args(('value',), request.args)
+    value, = require_args(('value',), request.args)
     value = int(value)
 
     resp = pipe_send(('set_brightness', value))
