@@ -1,6 +1,7 @@
+import abc
 import time
 from enum import Enum
-from typing import Tuple, Optional, Any
+from typing import Tuple, Optional, Dict, Type
 
 from rpi_ws281x import Color, PixelStrip
 
@@ -18,11 +19,20 @@ class CommandResponse(Enum):
     FAILED = 2
 
 
-class SetColorProcess:
+class Process(abc.ABC):
+    def __init__(self, can_wait: bool):
+        self.can_wait = can_wait
+
+    @abc.abstractmethod
+    def run(self, strip: PixelStrip) -> bool:
+        pass
+
+
+class SetColorProcess(Process):
 
     def __init__(self, color: Color):
+        super().__init__(False)
         self.color = color
-        self.can_wait = False
 
     def run(self, strip: PixelStrip) -> bool:
         for i in range(strip.numPixels()):
@@ -30,15 +40,15 @@ class SetColorProcess:
         return True
 
 
-class Halloween1Process:
+class Halloween1Process(Process):
 
     def __init__(self):
+        super().__init__(False)
         self.orange = Color(255, 60, 0)
         self.purple = Color(130, 0, 255)
         self.size = 8
         self.offset = 0
         self.wait_ms = 10
-        self.can_wait = False
 
     def run(self, strip: PixelStrip) -> bool:
         for i in range(strip.numPixels()):
@@ -51,14 +61,14 @@ class Halloween1Process:
         return False
 
 
-class Halloween2Process:
+class Halloween2Process(Process):
 
     def __init__(self):
+        super().__init__(False)
         self.orange = Color(255, 60, 0)
         self.purple = Color(130, 0, 255)
         self.current_color = self.orange
         self.offset = 0
-        self.can_wait = False
 
     def run(self, strip: PixelStrip) -> bool:
         strip.setPixelColor(self.offset, self.current_color)
@@ -75,16 +85,16 @@ class Halloween2Process:
         return False
 
 
-class Halloween3Process:
+class Halloween3Process(Process):
 
     def __init__(self):
+        super().__init__(False)
         orange = Color(255, 60, 0)
         purple = Color(130, 0, 255)
         black = Color(0, 0, 0)
         self.colors = [orange, orange, black, purple, purple, black]
         self.offset = 0
         self.chases = 6
-        self.can_wait = False
 
     def run(self, strip: PixelStrip) -> bool:
         chase_size = strip.numPixels() / self.chases
@@ -98,15 +108,15 @@ class Halloween3Process:
         return False
 
 
-class DoNothingProcess:
+class DoNothingProcess(Process):
     def __init__(self):
-        self.can_wait = True
+        super().__init__(True)
 
     def run(self, strip: PixelStrip) -> bool:
         return False
 
 
-command_names = {
+command_names: Dict[str, Type[Process]] = {
     'set_color': SetColorProcess,
     'halloween1': Halloween1Process,
     'halloween2': Halloween2Process,
@@ -128,7 +138,7 @@ def receive_from_pipe(pipe, timeout=-1) -> Optional[Tuple[str, ...]]:
     return None
 
 
-def process_command(pipe, wait=False):
+def process_command(pipe, wait=False) -> Optional[Process]:
     if wait:
         command = receive_from_pipe(pipe)
     else:
@@ -159,7 +169,7 @@ def run_control_loop(pipe):
 
     speed = 6
 
-    current_process = DoNothingProcess()
+    current_process: Process = DoNothingProcess()
 
     try:
         while True:
