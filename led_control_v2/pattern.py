@@ -1,31 +1,30 @@
 from abc import ABC, abstractmethod
 from random import randint
 
-from rpi_ws281x import PixelStrip, RGBW, Color
+from rpi_ws281x import RGBW, Color
 
 
 class Pattern(ABC):
+
     @abstractmethod
-    def run(self, strip: PixelStrip, progress: float):
+    def calculate_pixel(self, progress: float, index: int, total_leds: int) -> RGBW:
         pass
 
 
 class NothingPattern(Pattern):
-    def run(self, strip: PixelStrip, progress: float):
-        pass
+    def calculate_pixel(self, progress: float, index: int, total_leds: int):
+        return None
 
 
 class ColorPattern(Pattern):
     def __init__(self, color: RGBW):
         self.color = color
 
-    def run(self, strip: PixelStrip, progress: float):
-        for i in range(strip.numPixels()):
-            strip.setPixelColor(i, self.color)
+    def calculate_pixel(self, progress: float, index: int, total_leds: int) -> RGBW:
+        return self.color
 
 
 class FullRandomPattern(Pattern):
-    def run(self, strip: PixelStrip, progress: float):
-        for i in range(strip.numPixels()):
-            def randi(): return randint(0, 255)
-            strip.setPixelColor(i, Color(randi(), randi(), randi()))
+    def calculate_pixel(self, progress: float, index: int, total_leds: int) -> RGBW:
+        def randi(): return randint(0, 255)
+        return Color(randi(), randi(), randi())
