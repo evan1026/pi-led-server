@@ -4,7 +4,7 @@ from multiprocessing import Pipe
 
 from rpi_ws281x import PixelStrip
 
-from .command_handling import process_command
+from .command import process_command
 from .config import *
 from .pattern import Pattern, NothingPattern
 

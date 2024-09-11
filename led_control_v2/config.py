@@ -2,7 +2,7 @@ from typing import Dict, Any, Optional, List
 
 from rpi_ws281x import Color
 
-from .command_handling import CommandHandler
+from .command import CommandHandler
 from .pattern import ColorPattern, FullRandomPattern, Pattern, OnePxChase, Timed, Twice, NTimes, Reversed
 
 LED_COUNT = 300
