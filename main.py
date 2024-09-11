@@ -6,7 +6,7 @@ from flask_api import status
 from rpi_ws281x import Color
 from werkzeug.datastructures import MultiDict
 
-import led_control
+import led_control_v2 as led_control
 
 app = Flask(__name__)
 pipe = None
