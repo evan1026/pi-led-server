@@ -1,19 +1,11 @@
 import math
 from multiprocessing import Pipe
-from typing import Dict
 
 from rpi_ws281x import PixelStrip
 
-from .command_handling import CommandHandler, process_command
-from .pattern import NothingPattern, ColorPattern, FullRandomPattern, Pattern
-
-LED_COUNT = 900
-LED_PIN = 18
-LED_FREQ_HZ = 800000
-LED_DMA = 10
-LED_BRIGHTNESS = 255
-LED_INVERT = False
-LED_CHANNEL = 0
+from .command_handling import process_command
+from .config import *
+from .pattern import NothingPattern, Pattern
 
 
 class LedStrip(PixelStrip):
@@ -24,23 +16,9 @@ class LedStrip(PixelStrip):
 class PatternContext:
     def __init__(self, strip: LedStrip):
         self.current_pattern = NothingPattern()
-        self.current_progress = 0
-        self.progress_increment = 0.01
+        self.current_progress = INITIAL_PROGRESS
+        self.progress_increment = INITIAL_PROGRESS_INCREMENT
         self.strip = strip
-
-
-commands: Dict[str, CommandHandler] = {
-    'set_brightness': lambda context, args: None,
-    'set_color': lambda context, args: ColorPattern(args[0]),
-    'set_scale_factor': lambda context, args: None,
-    'halloween1': lambda context, args: None,
-    'halloween2': lambda context, args: None,
-    'halloween3': lambda context, args: None,
-    'full_random': lambda context, args: FullRandomPattern()
-}
-
-no_args_commands = ['halloween1', 'halloween2', 'halloween3', 'full_random']
-set_value_commands = ['set_brightness', 'set_scale_factor']
 
 
 def run_control_loop(pipe):
@@ -85,7 +63,7 @@ def _update_progress(progress: float, progress_increment: float) -> float:
 
 
 def _fade_out(strip: LedStrip):
-    for i in range(strip.getBrightness(), -1, -10):
+    for i in range(strip.getBrightness(), -1, -FADE_OUT_SPEED):
         strip.setBrightness(i)
         strip.show()
     strip.setBrightness(0)
