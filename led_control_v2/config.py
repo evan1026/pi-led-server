@@ -1,7 +1,9 @@
-from typing import Dict
+from typing import Dict, Any, Optional, List
+
+from rpi_ws281x import Color
 
 from .command_handling import CommandHandler
-from .pattern import ColorPattern, FullRandomPattern
+from .pattern import ColorPattern, FullRandomPattern, Pattern, OnePxChase, Timed, Twice, NTimes, Reversed
 
 LED_COUNT = 300
 LED_PIN = 18
@@ -27,7 +29,7 @@ commands: Dict[str, CommandHandler] = {
     'set_brightness': _handle_set_brightness,
     'set_color': lambda _, _args: ColorPattern(_args[0]),
     'set_scale_factor': lambda _, __: None,
-    'halloween1': lambda _, __: None,
+    'halloween1': lambda _, __: Reversed(Timed(10, NTimes(1000, OnePxChase(ColorPattern(Color(255, 127, 0)))))),
     'halloween2': lambda _, __: None,
     'halloween3': lambda _, __: None,
     'full_random': lambda _, __: FullRandomPattern()
