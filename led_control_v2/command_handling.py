@@ -6,7 +6,7 @@ from .pattern import Pattern
 
 CommandHandler = Callable[[Any, List[Any]], Optional[Pattern]]
 """
-Function that takes (context: Any, args: List[Any]) and returns the Pattern to switch to
+Function that takes (context: Context, args: List[Any]) and returns the Pattern to switch to
 """
 
 
@@ -15,7 +15,7 @@ class CommandResponse(Enum):
     FAILED = 2
 
 
-def process_command(commands: Dict[str, CommandHandler], pipe: Pipe, wait=False) -> Optional[Pattern]:
+def process_command(commands: Dict[str, CommandHandler], pipe: Pipe, context: Any, wait=False) -> Optional[Pattern]:
     command_from_pipe = receive_from_pipe(pipe, timeout=-1 if wait else 0)
 
     if command_from_pipe is None:
@@ -25,7 +25,7 @@ def process_command(commands: Dict[str, CommandHandler], pipe: Pipe, wait=False)
         name, *args = command_from_pipe
 
         command_handler = commands[name]
-        new_pattern = command_handler(args)
+        new_pattern = command_handler(context, args)
 
         pipe.send(CommandResponse.OK)
         return new_pattern
