@@ -21,19 +21,24 @@ FADE_OUT_SPEED = 10
 
 
 def _handle_set_brightness(context: Any, args: List[Any]) -> Optional[Pattern]:
-    context.strip.setBrightness(args[0])
+    context.strip.setBrightness(int(args[0]))
+    return None
+
+
+def _handle_set_increment(context: Any, args: List[Any]) -> Optional[Pattern]:
+    context.progress_increment = float(args[0])
     return None
 
 
 commands: Dict[str, CommandHandler] = {
     'set_brightness': _handle_set_brightness,
     'set_color': lambda _, _args: ColorPattern(_args[0]),
-    'set_scale_factor': lambda _, __: None,
-    'halloween1': lambda _, __: Reversed(Timed(10, NTimes(1000, OnePxChase(ColorPattern(Color(255, 127, 0)))))),
+    'set_increment': _handle_set_increment,
+    'halloween1': lambda _, __: OnePxChase(ColorPattern(Color(255, 127, 0))),
     'halloween2': lambda _, __: None,
     'halloween3': lambda _, __: None,
     'full_random': lambda _, __: FullRandomPattern()
 }
 
 no_args_commands = ['halloween1', 'halloween2', 'halloween3', 'full_random']
-set_value_commands = ['set_brightness', 'set_scale_factor']
+set_value_commands = ['set_brightness', 'set_increment']

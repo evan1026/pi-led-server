@@ -68,7 +68,7 @@ def set_value(key: str):
         return "Unknown item", status.HTTP_404_NOT_FOUND
 
     value, = require_args(('value',), request.args)
-    value = int(value)
+    value = float(value)
 
     resp = pipe_send((key, value))
     return get_return_for_response(resp)
