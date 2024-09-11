@@ -22,7 +22,6 @@ def pipe_send(data: Any) -> Any:
     with pipe_mutex:
         pipe.send(data)
         resp = pipe.recv()
-    print(f'{data}: {resp}')
     return resp
 
 

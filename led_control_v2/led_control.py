@@ -1,7 +1,9 @@
 from enum import Enum
-from typing import Dict, Any
+from typing import Dict
 
 from rpi_ws281x import PixelStrip
+
+from .command_handling import CommandHandler
 
 LED_COUNT = 900
 LED_PIN = 18
@@ -22,15 +24,14 @@ class CommandResponse(Enum):
     FAILED = 2
 
 
-commands: Dict[str, Any] = {
-    'set_brightness': None,
-    'set_color': None,
-    'set_scale_factor': None,
-    'halloween1': None,
-    'halloween2': None,
-    'halloween3': None
+commands: Dict[str, CommandHandler] = {
+    'set_brightness': lambda args: None,
+    'set_color': lambda args: None,
+    'set_scale_factor': lambda args: None,
+    'halloween1': lambda args: None,
+    'halloween2': lambda args: None,
+    'halloween3': lambda args: None
 }
-
 
 no_args_commands = ['halloween1', 'halloween2', 'halloween3']
 set_value_commands = ['set_brightness', 'set_scale_factor']
