@@ -62,7 +62,7 @@ def run_control_loop(pipe):
 
 
 def fade_out(strip: PixelStrip):
-    for i in range(strip.getBrightness(), -1, -32):
+    for i in range(strip.getBrightness(), -1, -10):
         strip.setBrightness(i)
         strip.show()
     strip.setBrightness(0)
