@@ -94,6 +94,7 @@ def root():
 def handle_missing_params(e: MissingValuesException):
     return "Missing required args: " + str(e.missing_args), status.HTTP_400_BAD_REQUEST
 
+
 @app.after_request
 def add_header(r):
     """

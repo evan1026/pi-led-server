@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Tuple, Optional, Dict, Type, Any
+from typing import Dict, Any
 
 from rpi_ws281x import PixelStrip
 
@@ -10,6 +10,11 @@ LED_DMA = 10
 LED_BRIGHTNESS = 255
 LED_INVERT = False
 LED_CHANNEL = 0
+
+
+class LedStrip(PixelStrip):
+    def __init__(self):
+        super().__init__(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
 
 
 class CommandResponse(Enum):
@@ -32,13 +37,19 @@ set_value_commands = ['set_brightness', 'set_scale_factor']
 
 
 def run_control_loop(pipe):
-    strip = PixelStrip(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
+    # import needs to be later to avoid circular reference
+    from led_control_v2.command_handling import process_command
+
+    strip = LedStrip()
     strip.begin()
     strip.show()
 
+    current_pattern = None  # TODO suitable default
     try:
         while True:
-            response = process_command(pipe, wait=True)
+            new_pattern = process_command(commands, pipe, wait=True)
+            current_pattern = new_pattern if new_pattern is not None else current_pattern
+            # TODO run current pattern
     except KeyboardInterrupt:
         pass
     finally:
@@ -51,32 +62,3 @@ def fade_out(strip: PixelStrip):
         strip.show()
     strip.setBrightness(0)
     strip.show()
-
-
-def process_command(pipe, wait=False) -> Optional[Any]:
-    command = receive_from_pipe(pipe, timeout=-1 if wait else 0)
-
-    if command is None:
-        return None
-
-    try:
-        name = command[0]
-        args = command[1:]
-
-        command_data = commands[name]
-        # TODO
-        print(f'({name}, {args}): {command_data}')
-
-        pipe.send(CommandResponse.OK)
-        return None
-
-    except Exception as e:
-        print(repr(e))
-        pipe.send(CommandResponse.FAILED)
-        return None
-
-
-def receive_from_pipe(pipe, timeout=-1) -> Optional[Tuple[str, ...]]:
-    if timeout < 0 or pipe.poll(timeout):
-        return pipe.recv()
-    return None
