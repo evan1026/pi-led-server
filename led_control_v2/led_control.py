@@ -21,14 +21,22 @@ class LedStrip(PixelStrip):
         super().__init__(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
 
 
+class PatternContext:
+    def __init__(self, strip: LedStrip):
+        self.current_pattern = NothingPattern()
+        self.current_progress = 0
+        self.progress_increment = 0.01
+        self.strip = strip
+
+
 commands: Dict[str, CommandHandler] = {
-    'set_brightness': lambda args: None,
-    'set_color': lambda args: ColorPattern(args[0]),
-    'set_scale_factor': lambda args: None,
-    'halloween1': lambda args: None,
-    'halloween2': lambda args: None,
-    'halloween3': lambda args: None,
-    'full_random': lambda args: FullRandomPattern()
+    'set_brightness': lambda context, args: None,
+    'set_color': lambda context, args: ColorPattern(args[0]),
+    'set_scale_factor': lambda context, args: None,
+    'halloween1': lambda context, args: None,
+    'halloween2': lambda context, args: None,
+    'halloween3': lambda context, args: None,
+    'full_random': lambda context, args: FullRandomPattern()
 }
 
 no_args_commands = ['halloween1', 'halloween2', 'halloween3', 'full_random']
@@ -36,37 +44,34 @@ set_value_commands = ['set_brightness', 'set_scale_factor']
 
 
 def run_control_loop(pipe):
-    strip = _init_strip()
+    context = _init_context()
 
     try:
-        _main_loop(pipe, strip)
+        _main_loop(pipe, context)
     except KeyboardInterrupt:
         pass
     finally:
-        _fade_out(strip)
+        _fade_out(context.strip)
 
 
-def _init_strip() -> LedStrip:
+def _init_context() -> PatternContext:
     strip = LedStrip()
     strip.begin()
     strip.show()
-    return strip
+    return PatternContext(strip)
 
 
-def _main_loop(pipe: Pipe, strip: LedStrip):
-    current_pattern = NothingPattern()
-    current_progress = 0
-    progress_increment = 0.01
-
+def _main_loop(pipe: Pipe, context: PatternContext):
     while True:
         new_pattern = process_command(commands, pipe, wait=False)
-        current_pattern = new_pattern if new_pattern is not None else current_pattern
+        context.current_pattern = new_pattern if new_pattern is not None else context.current_pattern
 
-        _run_pattern(strip, current_pattern, current_progress)
-        current_progress = _update_progress(current_progress, progress_increment)
+        _run_pattern(context, context.current_pattern, context.current_progress)
+        context.current_progress = _update_progress(context.current_progress, context.progress_increment)
 
 
-def _run_pattern(strip: LedStrip, pattern: Pattern, progress: float):
+def _run_pattern(context: PatternContext, pattern: Pattern, progress: float):
+    strip = context.strip
     for i in range(strip.numPixels()):
         color = pattern.calculate_pixel(progress, i, strip.numPixels())
         if color is not None:

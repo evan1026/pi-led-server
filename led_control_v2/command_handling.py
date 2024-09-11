@@ -4,8 +4,10 @@ from typing import Optional, Dict, Tuple, Callable, List, Any
 
 from .pattern import Pattern
 
-
-CommandHandler = Callable[[List[Any]], Optional[Pattern]]
+CommandHandler = Callable[[Any, List[Any]], Optional[Pattern]]
+"""
+Function that takes (context: Any, args: List[Any]) and returns the Pattern to switch to
+"""
 
 
 class CommandResponse(Enum):
