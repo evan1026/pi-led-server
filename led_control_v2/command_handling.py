@@ -1,11 +1,16 @@
+from enum import Enum
 from multiprocessing import Pipe
 from typing import Optional, Dict, Tuple, Callable, List, Any
 
-import led_control
 from .pattern import Pattern
 
 
 CommandHandler = Callable[[List[Any]], Optional[Pattern]]
+
+
+class CommandResponse(Enum):
+    OK = 1
+    FAILED = 2
 
 
 def process_command(commands: Dict[str, CommandHandler], pipe: Pipe, wait=False) -> Optional[Pattern]:
@@ -20,12 +25,12 @@ def process_command(commands: Dict[str, CommandHandler], pipe: Pipe, wait=False)
         command_handler = commands[name]
         new_pattern = command_handler(args)
 
-        pipe.send(led_control.CommandResponse.OK)
+        pipe.send(CommandResponse.OK)
         return new_pattern
 
     except Exception as e:
         print(repr(e))
-        pipe.send(led_control.CommandResponse.FAILED)
+        pipe.send(CommandResponse.FAILED)
         return None
 
 

@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Dict
 
 from rpi_ws281x import PixelStrip
@@ -17,11 +16,6 @@ LED_CHANNEL = 0
 class LedStrip(PixelStrip):
     def __init__(self):
         super().__init__(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
-
-
-class CommandResponse(Enum):
-    OK = 1
-    FAILED = 2
 
 
 commands: Dict[str, CommandHandler] = {
