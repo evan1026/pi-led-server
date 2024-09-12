@@ -206,3 +206,42 @@ class ChasePattern(MemoryPattern):
             return self._sub_pattern.calculate_pixel(progress, index, total_leds)
         else:
             return self.color_at(index - leds_to_update)
+
+
+class SwitchingPattern(Pattern):
+
+    def __init__(self, sub_patterns: List[Pattern], weights: List[float]):
+        super().__init__(sub_patterns)
+
+        assert len(sub_patterns) == len(weights)
+        self._sub_patterns = sub_patterns
+        self._weights = weights
+        self._normalize_weights()
+
+    def _normalize_weights(self):
+        weight_sum = sum(self._weights)
+        self._weights = [weight / weight_sum for weight in self._weights]
+
+    def calculate_pixel(self, progress: float, index: int, total_leds: int) -> RGBW:
+        weight_sum = 0
+        i = 0
+
+        while i < len(self._weights):
+            weight = self._weights[i]
+            if weight_sum + weight < progress:
+                weight_sum += weight
+                i += 1
+            else:
+                break
+
+        return self._sub_patterns[i].calculate_pixel(progress, index, total_leds)
+
+
+class Stretch(Pattern):
+    def __init__(self, factor: float, sub_pattern: Pattern):
+        super().__init__([sub_pattern])
+        self._sub_pattern = sub_pattern
+        self._factor = factor
+
+    def calculate_pixel(self, progress: float, index: int, total_leds: int) -> RGBW:
+        return self._sub_pattern.calculate_pixel(progress, index, int(total_leds * self._factor))

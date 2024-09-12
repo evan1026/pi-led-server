@@ -3,7 +3,8 @@ from typing import Dict, Any, Optional, List
 from rpi_ws281x import Color
 
 from .command import CommandHandler
-from .pattern import ColorPattern, FullRandomPattern, Pattern, OnePxChase, Timed, Twice, NTimes, Reversed, ChasePattern
+from .pattern import ColorPattern, FullRandomPattern, Pattern, OnePxChase, Timed, Twice, NTimes, Reversed, ChasePattern, \
+    SwitchingPattern, Stretch
 
 LED_COUNT = 300
 LED_PIN = 18
@@ -35,8 +36,15 @@ commands: Dict[str, CommandHandler] = {
     'set_color': lambda _, _args: ColorPattern(_args[0]),
     'set_increment': _handle_set_increment,
     'halloween1': lambda _, __: OnePxChase(ColorPattern(Color(255, 127, 0))),
-    'halloween2': lambda _, __: ChasePattern(FullRandomPattern()),
-    'halloween3': lambda _, __: None,
+    'halloween2': lambda _, __: Reversed(ChasePattern(FullRandomPattern())),
+    'halloween3': lambda _, __: Stretch(4, ChasePattern(SwitchingPattern(
+        [
+            ColorPattern(Color(255, 0, 0)),
+            ColorPattern(Color(0, 255, 0)),
+            ColorPattern(Color(0, 0, 255))
+        ],
+        [1, 1, 1]
+    ), blend=True)),
     'full_random': lambda _, __: FullRandomPattern(),
     'random_waves': lambda _, __: ChasePattern(FullRandomPattern(), blend=True)
 }
