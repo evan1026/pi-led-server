@@ -2,15 +2,34 @@ import colorsys
 import time
 from abc import ABC, abstractmethod
 from random import randint
+from typing import Dict, Any, List
 
 from rpi_ws281x import RGBW, Color
 
 
 class Pattern(ABC):
 
+    def __init__(self, children: List['Pattern'] = None):
+        if children is None:
+            children = []
+
+        self._later_updates: Dict[str, Any] = {}
+        self._children = children
+
     @abstractmethod
     def calculate_pixel(self, progress: float, index: int, total_leds: int) -> RGBW:
         pass
+
+    def after_update(self):
+        for key in self._later_updates:
+            exec(f'{key} = self._later_updates[key]')
+        self._later_updates.clear()
+
+        for child in self._children:
+            child.after_update()
+
+    def _update_later(self, key: str, value: Any):
+        self._later_updates[key] = value
 
 
 class NothingPattern(Pattern):
@@ -20,6 +39,7 @@ class NothingPattern(Pattern):
 
 class ColorPattern(Pattern):
     def __init__(self, color: RGBW):
+        super().__init__()
         self.color = color
 
     def calculate_pixel(self, progress: float, index: int, total_leds: int) -> RGBW:
@@ -34,6 +54,7 @@ class FullRandomPattern(Pattern):
 
 class Timed(Pattern):
     def __init__(self, duration: float, sub_pattern: Pattern):
+        super().__init__([sub_pattern])
         self._start_time = time.time()
         self._duration = duration
         self._sub_pattern = sub_pattern
@@ -47,6 +68,9 @@ class NTimes(Pattern):
     def __init__(self, count: int, sub_pattern: Pattern, after: Pattern = None):
         if after is None:
             after = NothingPattern()
+
+        super().__init__([sub_pattern, after])
+
         self._count = count
         self._sub_pattern = sub_pattern
         self._after = after
@@ -83,6 +107,8 @@ class OnePxChase(Pattern):
         if background is None:
             background = ColorPattern(Color(0, 0, 0))
 
+        super().__init__([sub_pattern, background])
+
         self._sub_pattern = sub_pattern
         self._background = background
 
@@ -96,6 +122,7 @@ class OnePxChase(Pattern):
 
 class Reversed(Pattern):
     def __init__(self, sub_pattern: Pattern):
+        super().__init__([sub_pattern])
         self._sub_pattern = sub_pattern
 
     def calculate_pixel(self, progress: float, index: int, total_leds: int) -> RGBW:
@@ -110,42 +137,29 @@ class Reversed(Pattern):
 class MemoryPattern(Pattern, ABC):
     _LAYERS = 2
 
-    def __init__(self):
+    def __init__(self, children: List[Pattern] = None):
+        super().__init__(children)
         self._memory = []
-        for i in range(MemoryPattern._LAYERS):
-            self._memory.append([])
 
     def calculate_pixel(self, progress: float, index: int, total_leds: int) -> RGBW:
         self._update_memory_size(total_leds)
         color = self._calculate_pixel_with_memory(progress, index, total_leds)
-
-        for i in range(len(self._memory) - 1):
-            self._memory[i + 1][index] = self._memory[i][index]
-        self._memory[0][index] = color
-
+        self._update_later(f'self._memory[{index}]', color)
         return color
 
-    def color_at(self, index: int, steps_back: int) -> RGBW:
-        steps_back = steps_back - 1
-
-        assert steps_back >= 0
+    def color_at(self, index: int) -> RGBW:
         assert index >= 0
-
-        if steps_back >= len(self._memory) or index >= len(self._memory[steps_back]):
+        if index >= len(self._memory):
             return Color(0, 0, 0)
-        return self._memory[steps_back][index]
+        return self._memory[index]
 
     @abstractmethod
     def _calculate_pixel_with_memory(self, progress: float, index: int, total_leds: int) -> RGBW:
         pass
 
     def _update_memory_size(self, total_leds):
-        for i in range(len(self._memory)):
-            if len(self._memory[i]) < total_leds:
-                self._memory[i].extend([Color(0, 0, 0)] * (total_leds - len(self._memory[i])))
-
-
-# TODO some kind of after update hook for patterns? lots of cases where a pattern wants to know when it's safe to update
+        if len(self._memory) < total_leds:
+            self._memory.extend([Color(0, 0, 0)] * (total_leds - len(self._memory)))
 
 
 def _color_blend(color1: RGBW, color2: RGBW) -> RGBW:
@@ -168,7 +182,7 @@ def _avg(a: float, b: float) -> float:
 class ChasePattern(MemoryPattern):
 
     def __init__(self, sub_pattern: Pattern, blend=False):
-        super().__init__()
+        super().__init__([sub_pattern])
         self._sub_pattern = sub_pattern
         self._prev_progress = 0
         self._blend = blend
@@ -181,15 +195,14 @@ class ChasePattern(MemoryPattern):
         leds_to_update = progress_amount * total_leds
         if leds_to_update < 1:
             if index == 0 or not self._blend:
-                return self.color_at(index, 1)
-            return _color_blend(self.color_at(index, 1), self.color_at(index - 1, 1))
-
+                return self.color_at(index)
+            return _color_blend(self.color_at(index), self.color_at(index - 1))
         leds_to_update = int(leds_to_update)
 
-        if index == total_leds - 1:
-            self._prev_progress = progress
+        if index == 0:
+            self._update_later('self._prev_progress', progress)
 
         if index < leds_to_update:
             return self._sub_pattern.calculate_pixel(progress, index, total_leds)
         else:
-            return self.color_at(index - leds_to_update, 2)
+            return self.color_at(index - leds_to_update)

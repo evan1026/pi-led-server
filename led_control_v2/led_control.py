@@ -66,6 +66,7 @@ def _run_pattern(context: Context, pattern: Pattern, progress: float):
         color = pattern.calculate_pixel(progress, i, strip.numPixels())
         if color is not None:
             strip.setPixelColor(i, color)
+    pattern.after_update()
     strip.show()
 
 
