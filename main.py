@@ -76,7 +76,7 @@ def set_value(key: str):
 
 @app.route('/pattern/<path:pattern>', methods=['GET'])
 def pattern_input(pattern: str):
-    if pattern not in led_control.no_args_commands:
+    if pattern not in led_control.patterns:
         return "Unknown pattern", status.HTTP_404_NOT_FOUND
 
     resp = pipe_send((pattern,))
@@ -87,6 +87,11 @@ def pattern_input(pattern: str):
 @app.route('/', methods=['GET'])
 def root():
     return app.send_static_file('index.html')
+
+
+@app.route('/patterns', methods=['GET'])
+def patterns():
+    return led_control.patterns, status.HTTP_200_OK
 
 
 @app.errorhandler(MissingValuesException)

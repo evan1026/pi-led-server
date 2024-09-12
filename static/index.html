@@ -5,13 +5,10 @@
     <title>Title</title>
     <script>
         function hitEndpoint(endpoint) {
-            fetch(endpoint,
-                {
-                    method: 'GET'
-                }
-            ).then(response => {
-                console.log(response);
-            })
+            fetch(endpoint,{method: 'GET'})
+                .then(response => {
+                    console.log(response);
+                })
         }
 
         function setColor() {
@@ -37,13 +34,26 @@
                 value: value
             }));
         }
+
+        function loadPatternButtons() {
+            fetch("/patterns")
+                .then((response) => response.json())
+                .then((patterns) => {
+                    for (const pattern of patterns) {
+                        let button = document.createElement("button");
+                        button.onclick = function() {
+                            hitEndpoint("/pattern/" + pattern);
+                        }
+                        button.textContent = pattern;
+                        document.getElementById("patternButtons").appendChild(button);
+                    }
+                })
+                .catch(console.error);
+        }
     </script>
 </head>
-<body>
-    <button onclick="hitEndpoint('/pattern/halloween1')">halloween1</button>
-    <button onclick="hitEndpoint('/pattern/halloween2')">halloween2</button>
-    <button onclick="hitEndpoint('/pattern/halloween3')">halloween3</button>
-    <button onclick="hitEndpoint('/pattern/full_random')">full_random</button>
+<body onload="loadPatternButtons()">
+    <div id="patternButtons"></div>
 
     <br/>
     <br/>
