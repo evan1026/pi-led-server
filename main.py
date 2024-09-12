@@ -43,13 +43,13 @@ def require_args(required_args: Iterable[str], args: MultiDict) -> List[str]:
 
 
 def get_return_for_response(response: led_control.CommandResponse):
-    if response == led_control.CommandResponse.OK:
+    if response.status == led_control.CommandResponse.Status.OK:
         return '', status.HTTP_200_OK
     else:
         return '', status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
-@app.route('/color', methods=['GET'])
+@app.route('/color', methods=['PUT'])
 def set_color():
     red, green, blue = require_args(('r', 'g', 'b'), request.args)
 
@@ -57,30 +57,32 @@ def set_color():
     green = int(green)
     blue = int(blue)
 
-    resp = pipe_send(('set_color', Color(red, green, blue)))
+    resp = pipe_send(led_control.SetColorCommand(Color(red, green, blue)))
     return get_return_for_response(resp)
 
 
-@app.route('/set_value/<path:key>', methods=['GET'])
-def set_value(key: str):
-    key = 'set_' + key
-    if key not in led_control.set_value_commands:
-        return "Unknown item", status.HTTP_404_NOT_FOUND
-
+@app.route('/set_value/brightness', methods=['PUT'])
+def set_brightness():
     value, = require_args(('value',), request.args)
-    value = float(value)
-
-    resp = pipe_send((key, value))
+    command = led_control.SetBrightnessCommand(int(value))
+    resp = pipe_send(command)
     return get_return_for_response(resp)
 
 
-@app.route('/pattern/<path:pattern>', methods=['GET'])
+@app.route('/set_value/increment', methods=['PUT'])
+def set_increment():
+    value, = require_args(('value',), request.args)
+    command = led_control.SetIncrementCommand(float(value))
+    resp = pipe_send(command)
+    return get_return_for_response(resp)
+
+
+@app.route('/pattern/<path:pattern>', methods=['PUT'])
 def pattern_input(pattern: str):
     if pattern not in led_control.patterns:
         return "Unknown pattern", status.HTTP_404_NOT_FOUND
 
-    resp = pipe_send((pattern,))
-
+    resp = pipe_send(led_control.PatternCommand(pattern))
     return get_return_for_response(resp)
 
 

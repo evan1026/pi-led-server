@@ -20,6 +20,7 @@ class Context:
         self.current_progress = INITIAL_PROGRESS
         self.progress_increment = INITIAL_PROGRESS_INCREMENT
         self.strip = strip
+        self.pattern_constructors = pattern_constructors
 
 
 def run_control_loop(pipe):
@@ -44,7 +45,7 @@ def _main_loop(pipe: Pipe, context: Context):
     while True:
         start_time = time.time()
 
-        new_pattern = process_command(commands, pipe, context, wait=False)
+        new_pattern = process_command(pipe, context)
         if new_pattern is not None:
             context.current_pattern = new_pattern
             context.current_progress = INITIAL_PROGRESS
