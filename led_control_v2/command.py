@@ -33,11 +33,11 @@ class Command(ABC):
     def handle(self, context: Any) -> Tuple[CommandResponse, Optional[Pattern]]:
         pass
 
-    def response(self, status: CommandResponse.Status) -> CommandResponse:
-        return CommandResponse(self.id, status)
+    def response(self, status: CommandResponse.Status, data: Any = None) -> CommandResponse:
+        return CommandResponse(self.id, status, data)
 
-    def ok_response(self) -> CommandResponse:
-        return self.response(CommandResponse.Status.OK)
+    def ok_response(self, data: Any = None) -> CommandResponse:
+        return self.response(CommandResponse.Status.OK, data)
 
     def empty_ok_response(self) -> Tuple[CommandResponse, Optional[Pattern]]:
         return self.ok_response(), None
@@ -74,6 +74,11 @@ class SetBrightnessCommand(Command):
         return self.empty_ok_response()
 
 
+class GetBrightnessCommand(Command):
+    def handle(self, context: Any) -> Tuple[CommandResponse, Optional[Pattern]]:
+        return self.ok_response(context.strip.getBrightness()), None
+
+
 class SetIncrementCommand(Command):
     def __init__(self, value: float):
         super().__init__()
@@ -82,6 +87,11 @@ class SetIncrementCommand(Command):
     def handle(self, context: Any) -> Tuple[CommandResponse, Optional[Pattern]]:
         context.progress_increment = self.value
         return self.empty_ok_response()
+
+
+class GetIncrementCommand(Command):
+    def handle(self, context: Any) -> Tuple[CommandResponse, Optional[Pattern]]:
+        return self.ok_response(context.progress_increment), None
 
 
 def process_command(pipe: Pipe, context: Any) -> Optional[Pattern]:
@@ -98,7 +108,7 @@ def process_command(pipe: Pipe, context: Any) -> Optional[Pattern]:
 
     except Exception as e:
         print(repr(e))
-        pipe.send(CommandResponse(command_from_pipe.id, CommandResponse.Status.FAILED, e))
+        pipe.send(command_from_pipe.response(CommandResponse.Status.FAILED, e))
         return None
 
 

@@ -28,11 +28,25 @@
             }));
         }
 
+        function fetchBrightness() {
+            return fetch("/get_value/brightness").then((response) => response.json())
+        }
+
+        function fetchIncrement() {
+            return fetch("/get_value/increment").then((response) => response.json())
+        }
+
         function setIncrement() {
             let value = document.getElementById('incrementInput').value ** 4;
             hitEndpoint('/set_value/increment?' + new URLSearchParams({
                 value: value
             }));
+        }
+
+        function onLoad() {
+            loadPatternButtons();
+            fetchBrightness().then((brightness) => document.getElementById("brightnessInput").value = brightness);
+            fetchIncrement().then((increment) => document.getElementById("incrementInput").value = increment ** 0.25);
         }
 
         function loadPatternButtons() {
@@ -52,7 +66,7 @@
         }
     </script>
 </head>
-<body onload="loadPatternButtons()">
+<body onload="onLoad()">
     <div id="patternButtons"></div>
 
     <br/>

@@ -43,10 +43,16 @@ def require_args(required_args: Iterable[str], args: MultiDict) -> List[str]:
 
 
 def get_return_for_response(response: led_control.CommandResponse):
-    if response.status == led_control.CommandResponse.Status.OK:
-        return '', status.HTTP_200_OK
+    data = response.data
+    if data is None:
+        data = ''
     else:
-        return '', status.HTTP_500_INTERNAL_SERVER_ERROR
+        data = str(data)
+
+    if response.status == led_control.CommandResponse.Status.OK:
+        return data, status.HTTP_200_OK
+    else:
+        return data, status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
 @app.route('/color', methods=['PUT'])
@@ -69,10 +75,24 @@ def set_brightness():
     return get_return_for_response(resp)
 
 
+@app.route('/get_value/brightness', methods=['GET'])
+def get_brightness():
+    command = led_control.GetBrightnessCommand()
+    resp = pipe_send(command)
+    return get_return_for_response(resp)
+
+
 @app.route('/set_value/increment', methods=['PUT'])
 def set_increment():
     value, = require_args(('value',), request.args)
     command = led_control.SetIncrementCommand(float(value))
+    resp = pipe_send(command)
+    return get_return_for_response(resp)
+
+
+@app.route('/get_value/increment', methods=['GET'])
+def get_increment():
+    command = led_control.GetIncrementCommand()
     resp = pipe_send(command)
     return get_return_for_response(resp)
 
