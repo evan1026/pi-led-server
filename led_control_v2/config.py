@@ -37,7 +37,8 @@ commands: Dict[str, CommandHandler] = {
     'halloween1': lambda _, __: OnePxChase(ColorPattern(Color(255, 127, 0))),
     'halloween2': lambda _, __: ChasePattern(FullRandomPattern()),
     'halloween3': lambda _, __: None,
-    'full_random': lambda _, __: FullRandomPattern()
+    'full_random': lambda _, __: FullRandomPattern(),
+    'random_waves': lambda _, __: ChasePattern(FullRandomPattern(), blend=True)
 }
 
 no_args_commands = ['halloween1', 'halloween2', 'halloween3', 'full_random']
